@@ -1,11 +1,16 @@
 package com.nordclan.meeting.entities;
 
+import javax.persistence.*;
 import java.util.List;
 
+@Entity
 public class BookingUser {
+    @Id
     private Long id;
+    @Column(unique = true)
     private String name;
     private String password;
+    @OneToMany(fetch = FetchType.LAZY, mappedBy = "user")
     private List<BookingEvent> events;
 
     public Long getId() {

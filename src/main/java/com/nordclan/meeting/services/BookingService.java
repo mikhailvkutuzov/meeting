@@ -6,8 +6,11 @@ import com.nordclan.meeting.entities.BookingUser;
 import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.List;
+import java.util.Map;
 
 public interface BookingService {
+
+    BookingUser authorize(String name, String password);
 
     /**
      * Try to book an event for a particular user
@@ -16,26 +19,26 @@ public interface BookingService {
      * @param timeFrom event starting time
      * @param dateTo event ending date
      * @param timeTo event ending time
-     * @return
+     * @return the created event
      * @throws InvalidTimeUnit in case: timeFrom ot timeTo represent invalid time unit
      * @throws OverlappingTimeInterval in case: there is another event in a system and its time range overlaps with a range required for the current event
      */
-    BookingEvent book(BookingUser user, LocalDate dateFrom, LocalTime timeFrom, LocalDate dateTo, LocalTime timeTo) throws InvalidTimeUnit, OverlappingTimeInterval;
+    BookingEvent book(BookingUser user, LocalDate dateFrom, LocalTime timeFrom, LocalDate dateTo, LocalTime timeTo) throws InvalidTimeUnit, OverlappingTimeInterval, InvalidTimeRange;
 
     /**
      * Revoke an event registered by a user if it possible.
      * @param event the event to be revoked
      * @param user the user trying to revoke the event
-     * @throws NotEnoughRights
-     * @throws CouldNotRevokeHappenedEvent
+     * @throws NotEnoughRights self-describing
+     * @return an amount of minutes has been revoked successfully
      */
-    void revoke(BookingEvent event, BookingUser user) throws NotEnoughRights, CouldNotRevokeHappenedEvent;
+    int revoke(BookingEvent event, BookingUser user) throws NotEnoughRights;
 
     /**
-     * Return a list of events booked in an interval  [from ; to] (inclusive)  .
-     * @param from
-     * @param to
-     * @return
+     * Return a map of events grouped by days and booked in an interval [from ; to].
+     * @param from inclusive date
+     * @param to inclusive date
+     * @return map of events grouped by dates
      */
-    List<DayEvents> events(LocalDate from, LocalDate to);
+    Map<LocalDate, List<BookingEvent>> events(LocalDate from, LocalDate to) throws InvalidTimeRange;
  }

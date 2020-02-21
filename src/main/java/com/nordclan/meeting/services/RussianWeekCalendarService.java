@@ -14,6 +14,7 @@ import java.util.stream.Stream;
  */
 public class RussianWeekCalendarService implements CalendarService {
 
+    private int minutes;
     private List<LocalTime> timeIntervals;
 
     public RussianWeekCalendarService(int minutes) throws InvalidTimeUnit {
@@ -21,11 +22,12 @@ public class RussianWeekCalendarService implements CalendarService {
             throw new InvalidTimeUnit();
         }
 
-        timeIntervals = Stream.iterate(LocalTime.of(0, 0),
+        this.timeIntervals = Stream.iterate(LocalTime.of(0, 0),
                 (LocalTime time) -> time.getHour() != 23 || time.getMinute() != (60 - minutes),
                 (LocalTime time) -> time.plusMinutes(minutes))
                 .collect(Collectors.toList());
-        timeIntervals.add(LocalTime.of(23, (60 - minutes)));
+        this.timeIntervals.add(LocalTime.of(23, (60 - minutes)));
+        this.minutes = minutes;
     }
 
     @Override
@@ -51,5 +53,10 @@ public class RussianWeekCalendarService implements CalendarService {
     @Override
     public List<LocalDate> previousRange(LocalDate date) {
         return currentRange(date.minusDays(7));
+    }
+
+    @Override
+    public int getValidTimeInterval(int durationInMinutes) {
+        return  (durationInMinutes/minutes ) * minutes;
     }
 }

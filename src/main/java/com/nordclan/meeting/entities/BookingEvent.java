@@ -1,12 +1,25 @@
 package com.nordclan.meeting.entities;
 
-import java.time.LocalDateTime;
+import javax.persistence.*;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
+@Entity
 public class BookingEvent {
+    @Id
+    @SequenceGenerator(name = "bookingSequence", sequenceName = "booking_sequence", allocationSize = 10)
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "bookingSequence")
     private Long id;
-    private LocalDateTime from;
-    private LocalDateTime to;
+    private LocalDateTime fromDate;
+    private LocalDateTime toDate;
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "user_id")
     private BookingUser user;
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "event_participant", joinColumns = {@JoinColumn(name = "booking_id")}, inverseJoinColumns = {@JoinColumn(name="user_id")})
+    private List<BookingUser> participants;
 
     public Long getId() {
         return id;
@@ -16,20 +29,20 @@ public class BookingEvent {
         this.id = id;
     }
 
-    public LocalDateTime getFrom() {
-        return from;
+    public LocalDateTime getFromDate() {
+        return fromDate;
     }
 
-    public void setFrom(LocalDateTime from) {
-        this.from = from;
+    public void setFromDate(LocalDateTime fromDate) {
+        this.fromDate = fromDate;
     }
 
-    public LocalDateTime getTo() {
-        return to;
+    public LocalDateTime getToDate() {
+        return toDate;
     }
 
-    public void setTo(LocalDateTime to) {
-        this.to = to;
+    public void setToDate(LocalDateTime toDate) {
+        this.toDate = toDate;
     }
 
     public BookingUser getUser() {
@@ -38,6 +51,14 @@ public class BookingEvent {
 
     public void setUser(BookingUser user) {
         this.user = user;
+    }
+
+    public List<BookingUser> getParticipants() {
+        return participants;
+    }
+
+    public void setParticipants(List<BookingUser> participants) {
+        this.participants = participants;
     }
 
 }

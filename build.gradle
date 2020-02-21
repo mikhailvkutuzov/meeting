@@ -18,6 +18,9 @@ dependencies {
     testImplementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }
+    implementation group: 'org.postgresql', name: 'postgresql'
+
+    testImplementation group: 'org.hsqldb', name: 'hsqldb'
 }
 
 test {
