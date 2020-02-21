@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.*;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ExecutionException;
@@ -43,7 +44,7 @@ public class JpaBookingService implements BookingService {
     @Override
     public BookingEvent book(BookingUser user, LocalDate dateFrom, LocalTime timeFrom, LocalDate dateTo, LocalTime timeTo) throws InvalidTimeUnit, OverlappingTimeInterval {
 
-        List<LocalTime> available = calendarService.timeIntervals();
+        var available = calendarService.timeIntervals();
 
         if (!available.contains(timeFrom)) {
             throw new InvalidTimeUnit();
@@ -53,8 +54,8 @@ public class JpaBookingService implements BookingService {
             throw new InvalidTimeUnit();
         }
 
-        LocalDateTime from = LocalDateTime.of(dateFrom, timeFrom);
-        LocalDateTime to = LocalDateTime.of(dateTo, timeTo);
+        var from = LocalDateTime.of(dateFrom, timeFrom);
+        var to = LocalDateTime.of(dateTo, timeTo);
 
         if (from.isAfter(to)) {
             //todo
@@ -64,20 +65,30 @@ public class JpaBookingService implements BookingService {
         try {
             EventOrEvents submitResult = executor.submit(() -> {
 
-                BookingEvent event = new BookingEvent();
+                var event = new BookingEvent();
                 event.setFromDate(from);
                 event.setToDate(to);
                 event.setUser(user);
 
-                List<BookingEvent> overlapping = eventRepository.findAllByFromDateAfterOrToDateBefore(from, to);
+                List<BookingEvent> overlapping = eventRepository.findAllByFromDateBeforeAndToDateAfter(to, from);
 
                 EventOrEvents result = new EventOrEvents();
 
                 if (overlapping.size() > 0) {
                     result.overlapping = overlapping;
                 } else {
-                    eventRepository.save(event);
-                    result.event = event;
+                    try {
+                        eventRepository.save(event);
+                        result.event = event;
+                    } catch (RuntimeException e) {
+                        var theSame = eventRepository.findByFromDateAndToDate(from, to);
+                        if (theSame != null) {
+                            result.overlapping = new ArrayList<>(1);
+                            result.overlapping.add(theSame);
+                        } else {
+                            throw e;
+                        }
+                    }
                 }
                 return result;
             }).get();
@@ -102,19 +113,19 @@ public class JpaBookingService implements BookingService {
 
     @Override
     public int revoke(BookingEvent event, BookingUser user) throws NotEnoughRights {
-        if(!event.getUser().getId().equals(user.getId())) {
+        if (!event.getUser().getId().equals(user.getId())) {
             throw new NotEnoughRights();
         }
         try {
             return executor.submit(() -> {
-                LocalDateTime now = LocalDateTime.now();
-                LocalDateTime to = event.getToDate();
-                LocalDateTime from = event.getFromDate();
+                var now = LocalDateTime.now();
+                var to = event.getToDate();
+                var from = event.getFromDate();
                 if (now.isBefore(from)) {
                     eventRepository.delete(event);
                     return (int) Duration.between(from, to).toMinutes();
                 } else if (now.isBefore(to)) {
-                    int revokedMinutes = calendarService.getValidTimeInterval((int)Duration.between(now, event.getToDate()).toMinutes());
+                    int revokedMinutes = calendarService.getValidTimeInterval((int) Duration.between(now, event.getToDate()).toMinutes());
                     event.setToDate(to.minusMinutes(revokedMinutes));
                     eventRepository.save(event);
                     return revokedMinutes;
@@ -133,13 +144,15 @@ public class JpaBookingService implements BookingService {
     @Transactional(readOnly = true)
     @Override
     public Map<LocalDate, List<BookingEvent>> events(LocalDate from, LocalDate to) throws InvalidTimeRange {
-        LocalDateTime begin = LocalDateTime.of(from, LocalTime.of(0, 0));
-        LocalDateTime end = LocalDateTime.of(to, LocalTime.of(0, 0));
+        var begin = LocalDateTime.of(from, LocalTime.of(0, 0));
+        var end = LocalDateTime.of(to, LocalTime.of(0, 0));
         if (begin.isAfter(end)) {
             throw new InvalidTimeRange();
         }
-        List<BookingEvent> events = eventRepository.findAllByFromDateAfterOrToDateBefore(begin, end);
+        var events = eventRepository.findAllByFromDateBetweenOrToDateBetween(begin, end, begin, end);
 
-        return events.stream().collect(Collectors.groupingBy(e -> e.getFromDate().toLocalDate()));
+        return events.stream()
+                .filter(be -> be.getFromDate().isEqual(end) || be.getToDate().isEqual(begin))
+                .collect(Collectors.groupingBy(e -> e.getFromDate().toLocalDate()));
     }
 }

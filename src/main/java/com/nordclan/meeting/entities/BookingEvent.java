@@ -1,17 +1,22 @@
 package com.nordclan.meeting.entities;
 
+
+
 import javax.persistence.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
+@Table(uniqueConstraints={@UniqueConstraint(columnNames={"from_date", "to_date"})})
 public class BookingEvent {
     @Id
     @SequenceGenerator(name = "bookingSequence", sequenceName = "booking_sequence", allocationSize = 10)
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "bookingSequence")
     private Long id;
+    @Column(name = "from_date")
     private LocalDateTime fromDate;
+    @Column(name = "to_date")
     private LocalDateTime toDate;
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "user_id")
