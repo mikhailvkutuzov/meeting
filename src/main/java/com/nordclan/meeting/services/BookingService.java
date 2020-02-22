@@ -27,9 +27,19 @@ public interface BookingService {
     /**
      * Add some users into a meeting.
      * @param event represents the meeting
+     * @param actor
      * @param users a list of users to be added
      */
-    void addParticipants(BookingEvent event, List<BookingUser> users);
+    void addParticipants(BookingEvent event, BookingUser actor, List<BookingUser> users) throws NotEnoughRights;
+
+
+    /**
+     * Remove some users from the meeting.
+     * @param event represents the meeting
+     * @param actor
+     * @param users a list of users to be removed
+     */
+    void removeParticipants(BookingEvent event, BookingUser actor, List<BookingUser> users) throws NotEnoughRights;
 
     /**
      * Revoke an event registered by a user if it possible.

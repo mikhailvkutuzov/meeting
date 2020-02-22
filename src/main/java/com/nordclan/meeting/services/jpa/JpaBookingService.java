@@ -113,8 +113,46 @@ public class JpaBookingService implements BookingService {
     }
 
     @Override
-    public void addParticipants(BookingEvent event, List<BookingUser> users) {
+    public void addParticipants(BookingEvent event, BookingUser actor, List<BookingUser> users) throws NotEnoughRights {
 
+        var optional = eventRepository.findById(event.getId());
+        if (optional.isPresent()) {
+            var booking = optional.get();
+
+            if (booking.getUser().getId() != actor.getId()) {
+                throw new NotEnoughRights();
+            }
+
+            var participants = booking.getParticipants();
+            var participantIds = participants.stream().map(p -> p.getId()).collect(Collectors.toSet());
+            for (BookingUser user : users) {
+                if (participantIds.add(user.getId())) {
+                    participants.add(user);
+                }
+            }
+            eventRepository.save(booking);
+
+        } else {
+            throw new IllegalArgumentException();
+        }
+    }
+
+    @Override
+    public void removeParticipants(BookingEvent event, BookingUser actor, List<BookingUser> users) throws NotEnoughRights {
+        var optional = eventRepository.findById(event.getId());
+        if (optional.isPresent()) {
+            var booking = optional.get();
+
+            if (booking.getUser().getId() != actor.getId()) {
+                throw new NotEnoughRights();
+            }
+            List<Long> idToBeDeleted = users.stream().map(p -> p.getId()).collect(Collectors.toList());
+
+            booking.getParticipants().removeIf(p -> idToBeDeleted.contains(p.getId()));
+            eventRepository.save(booking);
+        } else {
+            throw new IllegalArgumentException();
+        }
     }
 
     @Override

@@ -11,6 +11,8 @@ import java.time.Duration;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @SpringBootTest
@@ -201,6 +203,41 @@ class MeetingApplicationTests {
 
         var event = bookingService.book(user1, today, intervals.get(6), today, intervals.get(10));
         bookingService.revoke(event, user1, dayBegin);
+    }
+
+    @Test
+    @Order(6)
+    public void addParticipants() throws InvalidTimeUnit, OverlappingTimeInterval, InvalidTimeRange, NotEnoughRights {
+        var user1 = authenticationService.authorize("name1", "password1");
+        var user2 = authenticationService.authorize("name2", "password2");
+        var today = LocalDateTime.now().toLocalDate();
+        var dayBegin = LocalDateTime.of(today, LocalTime.of(0,0));
+        List<LocalTime> intervals = calendarService.timeIntervals();
+
+        var be0 = bookingService.book(user1, today, intervals.get(1), today, intervals.get(2));
+        List<BookingUser> participants = new ArrayList<>();
+        participants.add(user2);
+        bookingService.addParticipants(be0, user1, participants);
+
+        var events = bookingService.events(today, today.plusDays(1));
+        Assertions.assertEquals(1, events.size());
+        Assertions.assertEquals(1, events.get(today).size());
+
+        var be00 = events.get(today).get(0);
+        var u1 = be00.getUser();
+        Assertions.assertEquals("name1", u1.getName());
+        Assertions.assertEquals(1, be00.getParticipants().size());
+
+        var u2 = be00.getParticipants().get(0);
+        Assertions.assertEquals("name2", u2.getName());
+        Assertions.assertThrows(NotEnoughRights.class, () ->  bookingService.removeParticipants(be00, u2, Collections.emptyList()));
+
+        bookingService.removeParticipants(be00, u1, participants);
+        events = bookingService.events(today, today.plusDays(1));
+        be0 = events.get(today).get(0);
+        Assertions.assertEquals(0, be0.getParticipants().size());
+
+        bookingService.revoke(be0, u1, dayBegin);
     }
 
 }

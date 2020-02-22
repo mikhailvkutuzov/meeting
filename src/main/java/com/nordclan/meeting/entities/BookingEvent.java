@@ -22,7 +22,7 @@ public class BookingEvent {
     @JoinColumn(name = "user_id")
     private BookingUser user;
 
-    @ManyToMany(fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "event_participant", joinColumns = {@JoinColumn(name = "booking_id")}, inverseJoinColumns = {@JoinColumn(name="user_id")})
     private List<BookingUser> participants;
 
