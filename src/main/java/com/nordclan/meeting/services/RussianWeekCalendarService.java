@@ -56,7 +56,7 @@ public class RussianWeekCalendarService implements CalendarService {
     }
 
     @Override
-    public int getValidTimeInterval(int durationInMinutes) {
-        return  (durationInMinutes/minutes ) * minutes;
+    public int getValidTimeInterval(int minutesInterval) {
+        return  (minutesInterval /minutes ) * minutes;
     }
 }

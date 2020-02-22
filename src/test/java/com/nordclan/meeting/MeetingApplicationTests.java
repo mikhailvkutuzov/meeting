@@ -148,7 +148,7 @@ class MeetingApplicationTests {
 
     @Test
     @Order(4)
-    public void showEvents() throws InvalidTimeUnit, OverlappingTimeInterval, InvalidTimeRange {
+    public void showEvents() throws InvalidTimeUnit, OverlappingTimeInterval, InvalidTimeRange, NotEnoughRights {
         var user1 = bookingService.authorize("name1", "password1");
 
         var today = LocalDateTime.now().toLocalDate();
@@ -175,6 +175,29 @@ class MeetingApplicationTests {
 
         var dayBefore = today.minusDays(1);
         Assertions.assertEquals(0, bookingService.events(dayBefore, today).size());
+
+        var dayBegin = LocalDateTime.of(today, LocalTime.of(0,0));
+
+        bookingService.revoke(be0, user1, dayBegin);
+        bookingService.revoke(be1, user1, dayBegin);
+        bookingService.revoke(be2, user1, dayBegin);
+        bookingService.revoke(be3, user1, dayBegin);
+
+        Assertions.assertEquals(0, bookingService.events(today, today.plusDays(1)).size());
+    }
+
+    @Test
+    @Order(5)
+    public void meetingCouldNotLastMoreThan4Intervals() throws InvalidTimeUnit, OverlappingTimeInterval, InvalidTimeRange, NotEnoughRights {
+        var user1 = bookingService.authorize("name1", "password1");
+        var today = LocalDateTime.now().toLocalDate();
+        var dayBegin = LocalDateTime.of(today, LocalTime.of(0,0));
+        List<LocalTime> intervals = calendarService.timeIntervals();
+
+        Assertions.assertThrows(InvalidTimeRange.class, () -> bookingService.book(user1, today, intervals.get(6), today, intervals.get(11)));
+
+        var event = bookingService.book(user1, today, intervals.get(6), today, intervals.get(10));
+        bookingService.revoke(event, user1, dayBegin);
     }
 
 }

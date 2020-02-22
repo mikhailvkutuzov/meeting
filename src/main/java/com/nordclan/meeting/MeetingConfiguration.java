@@ -19,6 +19,9 @@ public class MeetingConfiguration {
     @Value("${nordclan.calendar.interval}")
     private int minutes;
 
+    @Value("${nordclan.booking.max.interval.amount}")
+    private int maxLongitudeOfMeetingInIntervals;
+
     @Autowired
     private JpaBookingEventRepository eventRepository;
     @Autowired
@@ -35,7 +38,7 @@ public class MeetingConfiguration {
 
     @Bean
     public BookingService bookingService() {
-        return new JpaBookingService(userRepository, eventRepository, calendarService());
+        return new JpaBookingService(userRepository, eventRepository, calendarService(), maxLongitudeOfMeetingInIntervals);
     }
 
 

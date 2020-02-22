@@ -5,11 +5,13 @@ import com.nordclan.meeting.entities.BookingUser;
 import com.nordclan.meeting.services.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.*;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -20,20 +22,23 @@ import java.util.stream.Collectors;
 
 
 @Transactional(propagation = Propagation.REQUIRED)
-@Service
 public class JpaBookingService implements BookingService {
     private static final Logger logger = LoggerFactory.getLogger(JpaBookingService.class);
 
+    private int maxBookingMinutes;
     private JpaBookingUserRepository userRepository;
     private JpaBookingEventRepository eventRepository;
     private CalendarService calendarService;
     private ExecutorService executor;
 
-    public JpaBookingService(JpaBookingUserRepository userRepository, JpaBookingEventRepository eventRepository, CalendarService calendarService) {
+    public JpaBookingService(JpaBookingUserRepository userRepository, JpaBookingEventRepository eventRepository, CalendarService calendarService, int maxIntervalsToBook) {
         this.userRepository = userRepository;
         this.eventRepository = eventRepository;
         this.calendarService = calendarService;
         this.executor = Executors.newSingleThreadExecutor();
+
+        var intervals = calendarService.timeIntervals();
+        this.maxBookingMinutes = (int) (maxIntervalsToBook * Duration.between(intervals.get(0), intervals.get(1)).toMinutes());
     }
 
     @Override
@@ -58,6 +63,10 @@ public class JpaBookingService implements BookingService {
         var to = LocalDateTime.of(dateTo, timeTo);
 
         if (from.isAfter(to)) {
+            throw new InvalidTimeRange();
+        }
+
+        if (Duration.between(from, to).toMinutes() > maxBookingMinutes) {
             throw new InvalidTimeRange();
         }
 

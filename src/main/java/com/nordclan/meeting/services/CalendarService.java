@@ -35,6 +35,11 @@ public interface CalendarService {
     List<LocalDate> previousRange(LocalDate date);
 
 
-    int getValidTimeInterval(int durationInMinutes);
+    /**
+     * Return a minimal amount of minutes containing maximum amount of available time intervals in a minutesInterval.
+     * @param minutesInterval
+     * @return
+     */
+    int getValidTimeInterval(int minutesInterval);
 
 }
