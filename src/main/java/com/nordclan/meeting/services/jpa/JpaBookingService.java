@@ -42,7 +42,7 @@ public class JpaBookingService implements BookingService {
     }
 
     @Override
-    public BookingEvent book(BookingUser user, LocalDate dateFrom, LocalTime timeFrom, LocalDate dateTo, LocalTime timeTo) throws InvalidTimeUnit, OverlappingTimeInterval {
+    public BookingEvent book(BookingUser user, LocalDate dateFrom, LocalTime timeFrom, LocalDate dateTo, LocalTime timeTo) throws InvalidTimeUnit, OverlappingTimeInterval, InvalidTimeRange {
 
         var available = calendarService.timeIntervals();
 
@@ -58,8 +58,7 @@ public class JpaBookingService implements BookingService {
         var to = LocalDateTime.of(dateTo, timeTo);
 
         if (from.isAfter(to)) {
-            //todo
-            throw new InvalidTimeUnit();
+            throw new InvalidTimeRange();
         }
 
         try {
@@ -112,13 +111,12 @@ public class JpaBookingService implements BookingService {
     }
 
     @Override
-    public int revoke(BookingEvent event, BookingUser user) throws NotEnoughRights {
+    public int revoke(BookingEvent event, BookingUser user, LocalDateTime now) throws NotEnoughRights {
         if (!event.getUser().getId().equals(user.getId())) {
             throw new NotEnoughRights();
         }
         try {
             return executor.submit(() -> {
-                var now = LocalDateTime.now();
                 var to = event.getToDate();
                 var from = event.getFromDate();
                 if (now.isBefore(from)) {
@@ -152,7 +150,7 @@ public class JpaBookingService implements BookingService {
         var events = eventRepository.findAllByFromDateBetweenOrToDateBetween(begin, end, begin, end);
 
         return events.stream()
-                .filter(be -> be.getFromDate().isEqual(end) || be.getToDate().isEqual(begin))
+                .filter(be -> !be.getFromDate().isEqual(end) || !be.getToDate().isEqual(begin))
                 .collect(Collectors.groupingBy(e -> e.getFromDate().toLocalDate()));
     }
 }

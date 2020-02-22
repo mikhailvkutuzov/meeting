@@ -4,6 +4,7 @@ import com.nordclan.meeting.entities.BookingEvent;
 import com.nordclan.meeting.entities.BookingUser;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
@@ -29,10 +30,11 @@ public interface BookingService {
      * Revoke an event registered by a user if it possible.
      * @param event the event to be revoked
      * @param user the user trying to revoke the event
+     * @param now the time when this call has been done
      * @throws NotEnoughRights self-describing
      * @return an amount of minutes has been revoked successfully
      */
-    int revoke(BookingEvent event, BookingUser user) throws NotEnoughRights;
+    int revoke(BookingEvent event, BookingUser user, LocalDateTime now) throws NotEnoughRights;
 
     /**
      * Return a map of events grouped by days and booked in an interval [from ; to].
