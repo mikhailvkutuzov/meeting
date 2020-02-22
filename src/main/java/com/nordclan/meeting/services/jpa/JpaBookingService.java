@@ -26,24 +26,17 @@ public class JpaBookingService implements BookingService {
     private static final Logger logger = LoggerFactory.getLogger(JpaBookingService.class);
 
     private int maxBookingMinutes;
-    private JpaBookingUserRepository userRepository;
     private JpaBookingEventRepository eventRepository;
     private CalendarService calendarService;
     private ExecutorService executor;
 
-    public JpaBookingService(JpaBookingUserRepository userRepository, JpaBookingEventRepository eventRepository, CalendarService calendarService, int maxIntervalsToBook) {
-        this.userRepository = userRepository;
+    public JpaBookingService(JpaBookingEventRepository eventRepository, CalendarService calendarService, int maxIntervalsToBook) {
         this.eventRepository = eventRepository;
         this.calendarService = calendarService;
         this.executor = Executors.newSingleThreadExecutor();
 
         var intervals = calendarService.timeIntervals();
         this.maxBookingMinutes = (int) (maxIntervalsToBook * Duration.between(intervals.get(0), intervals.get(1)).toMinutes());
-    }
-
-    @Override
-    public BookingUser authorize(String name, String password) {
-        return userRepository.findByNameAndPassword(name, password);
     }
 
     @Override
@@ -117,6 +110,11 @@ public class JpaBookingService implements BookingService {
     private static class EventOrEvents {
         BookingEvent event;
         List<BookingEvent> overlapping;
+    }
+
+    @Override
+    public void addParticipants(BookingEvent event, List<BookingUser> users) {
+
     }
 
     @Override

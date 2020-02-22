@@ -19,7 +19,8 @@ dependencies {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }
     implementation group: 'org.postgresql', name: 'postgresql'
-
+    implementation group: 'org.springframework.boot', name: 'spring-boot-starter-security'
+    
     testImplementation group: 'org.hsqldb', name: 'hsqldb'
 }
 

@@ -1,10 +1,8 @@
 package com.nordclan.meeting;
 
 
-import com.nordclan.meeting.services.BookingService;
-import com.nordclan.meeting.services.CalendarService;
-import com.nordclan.meeting.services.InvalidTimeUnit;
-import com.nordclan.meeting.services.RussianWeekCalendarService;
+import com.nordclan.meeting.services.*;
+import com.nordclan.meeting.services.jpa.JpaAuthenticationService;
 import com.nordclan.meeting.services.jpa.JpaBookingEventRepository;
 import com.nordclan.meeting.services.jpa.JpaBookingService;
 import com.nordclan.meeting.services.jpa.JpaBookingUserRepository;
@@ -24,6 +22,7 @@ public class MeetingConfiguration {
 
     @Autowired
     private JpaBookingEventRepository eventRepository;
+
     @Autowired
     private JpaBookingUserRepository userRepository;
 
@@ -38,8 +37,12 @@ public class MeetingConfiguration {
 
     @Bean
     public BookingService bookingService() {
-        return new JpaBookingService(userRepository, eventRepository, calendarService(), maxLongitudeOfMeetingInIntervals);
+        return new JpaBookingService(eventRepository, calendarService(), maxLongitudeOfMeetingInIntervals);
     }
 
+    @Bean
+    public AuthenticationService authenticationService(){
+        return new JpaAuthenticationService(userRepository);
+    }
 
 }

@@ -18,6 +18,9 @@ import java.util.List;
 class MeetingApplicationTests {
 
     @Autowired
+    private AuthenticationService authenticationService;
+
+    @Autowired
     private JpaBookingUserRepository userRepository;
 
     @Autowired
@@ -43,8 +46,8 @@ class MeetingApplicationTests {
 
         userRepository.save(user2);
 
-        BookingUser u1 = bookingService.authorize("name1", "password1");
-        BookingUser u2 = bookingService.authorize("name2", "password2");
+        BookingUser u1 = authenticationService.authorize("name1", "password1");
+        BookingUser u2 = authenticationService.authorize("name2", "password2");
 
         Assertions.assertEquals(user1.getName(), u1.getName());
 
@@ -54,7 +57,7 @@ class MeetingApplicationTests {
     @Test
     @Order(2)
     public void makeBooking() throws InvalidTimeUnit, OverlappingTimeInterval, InvalidTimeRange, NotEnoughRights {
-        var user1 = bookingService.authorize("name1", "password1");
+        var user1 = authenticationService.authorize("name1", "password1");
 
         var now = LocalDateTime.now();
 
@@ -114,7 +117,7 @@ class MeetingApplicationTests {
     @Test
     @Order(3)
     public void overlappingAndInvalidRange() throws InvalidTimeUnit, OverlappingTimeInterval, InvalidTimeRange, NotEnoughRights {
-        var user1 = bookingService.authorize("name1", "password1");
+        var user1 = authenticationService.authorize("name1", "password1");
 
         var today = LocalDateTime.now().toLocalDate();
 
@@ -149,7 +152,7 @@ class MeetingApplicationTests {
     @Test
     @Order(4)
     public void showEvents() throws InvalidTimeUnit, OverlappingTimeInterval, InvalidTimeRange, NotEnoughRights {
-        var user1 = bookingService.authorize("name1", "password1");
+        var user1 = authenticationService.authorize("name1", "password1");
 
         var today = LocalDateTime.now().toLocalDate();
 
@@ -189,7 +192,7 @@ class MeetingApplicationTests {
     @Test
     @Order(5)
     public void meetingCouldNotLastMoreThan4Intervals() throws InvalidTimeUnit, OverlappingTimeInterval, InvalidTimeRange, NotEnoughRights {
-        var user1 = bookingService.authorize("name1", "password1");
+        var user1 = authenticationService.authorize("name1", "password1");
         var today = LocalDateTime.now().toLocalDate();
         var dayBegin = LocalDateTime.of(today, LocalTime.of(0,0));
         List<LocalTime> intervals = calendarService.timeIntervals();

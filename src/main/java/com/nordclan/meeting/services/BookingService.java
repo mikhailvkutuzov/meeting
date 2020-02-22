@@ -11,8 +11,6 @@ import java.util.Map;
 
 public interface BookingService {
 
-    BookingUser authorize(String name, String password);
-
     /**
      * Try to book an event for a particular user
      * @param user a user who tries to create an event
@@ -25,6 +23,13 @@ public interface BookingService {
      * @throws OverlappingTimeInterval in case: there is another event in a system and its time range overlaps with a range required for the current event
      */
     BookingEvent book(BookingUser user, LocalDate dateFrom, LocalTime timeFrom, LocalDate dateTo, LocalTime timeTo) throws InvalidTimeUnit, OverlappingTimeInterval, InvalidTimeRange;
+
+    /**
+     * Add some users into a meeting.
+     * @param event represents the meeting
+     * @param users a list of users to be added
+     */
+    void addParticipants(BookingEvent event, List<BookingUser> users);
 
     /**
      * Revoke an event registered by a user if it possible.
