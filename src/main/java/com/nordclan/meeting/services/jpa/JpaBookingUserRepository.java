@@ -5,6 +5,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface JpaBookingUserRepository extends JpaRepository<BookingUser, Long> {
 
+    BookingUser findByName(String name);
+
     BookingUser findByNameAndPassword(String name, String password);
 
 }
