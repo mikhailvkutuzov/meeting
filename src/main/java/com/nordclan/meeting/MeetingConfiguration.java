@@ -37,7 +37,7 @@ public class MeetingConfiguration {
 
     @Bean
     public BookingService bookingService() {
-        return new JpaBookingService(eventRepository, calendarService(), maxLongitudeOfMeetingInIntervals);
+        return new Split2DaysBookingEventsOnEventsOperation(new JpaBookingService(eventRepository, calendarService(), maxLongitudeOfMeetingInIntervals), calendarService());
     }
 
     @Bean
