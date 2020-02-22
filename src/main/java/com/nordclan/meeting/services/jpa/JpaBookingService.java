@@ -15,9 +15,6 @@ import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 
@@ -28,12 +25,10 @@ public class JpaBookingService implements BookingService {
     private int maxBookingMinutes;
     private JpaBookingEventRepository eventRepository;
     private CalendarService calendarService;
-    private ExecutorService executor;
 
     public JpaBookingService(JpaBookingEventRepository eventRepository, CalendarService calendarService, int maxIntervalsToBook) {
         this.eventRepository = eventRepository;
         this.calendarService = calendarService;
-        this.executor = Executors.newSingleThreadExecutor();
 
         var intervals = calendarService.timeIntervals();
         this.maxBookingMinutes = (int) (maxIntervalsToBook * Duration.between(intervals.get(0), intervals.get(1)).toMinutes());
@@ -63,47 +58,36 @@ public class JpaBookingService implements BookingService {
             throw new InvalidTimeRange();
         }
 
-        try {
-            EventOrEvents submitResult = executor.submit(() -> {
+        var event = new BookingEvent();
+        event.setFromDate(from);
+        event.setToDate(to);
+        event.setUser(user);
 
-                var event = new BookingEvent();
-                event.setFromDate(from);
-                event.setToDate(to);
-                event.setUser(user);
+        List<BookingEvent> overlapping = eventRepository.findAllByFromDateBeforeAndToDateAfter(to, from);
 
-                List<BookingEvent> overlapping = eventRepository.findAllByFromDateBeforeAndToDateAfter(to, from);
+        EventOrEvents result = new EventOrEvents();
 
-                EventOrEvents result = new EventOrEvents();
-
-                if (overlapping.size() > 0) {
-                    result.overlapping = overlapping;
+        if (overlapping.size() > 0) {
+            result.overlapping = overlapping;
+        } else {
+            try {
+                eventRepository.save(event);
+                result.event = event;
+            } catch (RuntimeException e) {
+                var theSame = eventRepository.findByFromDateAndToDate(from, to);
+                if (theSame != null) {
+                    result.overlapping = new ArrayList<>(1);
+                    result.overlapping.add(theSame);
                 } else {
-                    try {
-                        eventRepository.save(event);
-                        result.event = event;
-                    } catch (RuntimeException e) {
-                        var theSame = eventRepository.findByFromDateAndToDate(from, to);
-                        if (theSame != null) {
-                            result.overlapping = new ArrayList<>(1);
-                            result.overlapping.add(theSame);
-                        } else {
-                            throw e;
-                        }
-                    }
+                    throw e;
                 }
-                return result;
-            }).get();
-
-            if (submitResult.event != null) {
-                return submitResult.event;
-            } else {
-                throw new OverlappingTimeInterval(submitResult.overlapping);
             }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException(e.getCause());
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e.getCause());
+        }
+
+        if (result.event != null) {
+            return result.event;
+        } else {
+            throw new OverlappingTimeInterval(result.overlapping);
         }
     }
 
@@ -160,27 +144,18 @@ public class JpaBookingService implements BookingService {
         if (!event.getUser().getId().equals(user.getId())) {
             throw new NotEnoughRights();
         }
-        try {
-            return executor.submit(() -> {
-                var to = event.getToDate();
-                var from = event.getFromDate();
-                if (now.isBefore(from)) {
-                    eventRepository.delete(event);
-                    return (int) Duration.between(from, to).toMinutes();
-                } else if (now.isBefore(to)) {
-                    int revokedMinutes = calendarService.getValidTimeInterval((int) Duration.between(now, event.getToDate()).toMinutes());
-                    event.setToDate(to.minusMinutes(revokedMinutes));
-                    eventRepository.save(event);
-                    return revokedMinutes;
-                } else {
-                    return 0;
-                }
-            }).get();
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException(e);
-        } catch (ExecutionException e) {
-            throw new RuntimeException(e);
+        var to = event.getToDate();
+        var from = event.getFromDate();
+        if (now.isBefore(from)) {
+            eventRepository.delete(event);
+            return (int) Duration.between(from, to).toMinutes();
+        } else if (now.isBefore(to)) {
+            int revokedMinutes = calendarService.getValidTimeInterval((int) Duration.between(now, event.getToDate()).toMinutes());
+            event.setToDate(to.minusMinutes(revokedMinutes));
+            eventRepository.save(event);
+            return revokedMinutes;
+        } else {
+            return 0;
         }
     }
 
