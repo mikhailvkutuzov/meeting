@@ -24,4 +24,16 @@ public class JpaAuthenticationService implements AuthenticationService {
     public List<BookingUser> users() {
         return userRepository.findAll();
     }
+
+
+    @Override
+    public BookingUser findByName(String userName) {
+        return userRepository.findByName(userName);
+    }
+
+
+    @Override
+    public List<BookingUser> findByName(List<String> userNames) {
+        return userRepository.findAllByNameIn(userNames);
+    }
 }

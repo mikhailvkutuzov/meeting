@@ -54,6 +54,17 @@ class MeetingApplicationTests {
         Assertions.assertEquals(user1.getName(), u1.getName());
 
         Assertions.assertEquals(user2.getName(), u2.getName());
+
+        var names = new ArrayList<String>();
+        names.add("name1");
+        names.add("name2");
+        List<BookingUser> users =  authenticationService.findByName(names);
+
+        Assertions.assertEquals(2, users.size());
+
+        users.removeIf(u -> u.getName().equals("name1") || u.getName().equals("name2"));
+
+        Assertions.assertEquals(0, users.size());
     }
 
     @Test

@@ -10,4 +10,8 @@ public interface AuthenticationService {
 
     List<BookingUser> users();
 
+    BookingUser findByName(String userName);
+
+    List<BookingUser> findByName(List<String> userNames);
+
 }
