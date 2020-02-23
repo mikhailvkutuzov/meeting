@@ -86,4 +86,16 @@ public class ReactiveSingleThreadDelegatingBookingService implements ReactiveBoo
             }
         }, executor);
     }
+
+    @Override
+    public CompletableFuture<Map<LocalDate, List<BookingEvent>>> eventsForRange(LocalDate dateInRange) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                List<LocalDate> range = calendarService.currentRange(dateInRange);
+                return bookingService.events(range.get(0), range.get(range.size() - 1));
+            } catch (InvalidTimeRange e) {
+                throw new ReactiveBookingException(e);
+            }
+        }, executor);
+    }
 }

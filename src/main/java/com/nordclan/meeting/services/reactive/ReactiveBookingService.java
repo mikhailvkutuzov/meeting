@@ -4,7 +4,6 @@ import com.nordclan.meeting.entities.BookingEvent;
 import com.nordclan.meeting.entities.BookingUser;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
@@ -21,5 +20,7 @@ public interface ReactiveBookingService {
     CompletableFuture<Map<LocalDate, List<BookingEvent>>> revoke(BookingEvent event, BookingUser user);
 
     CompletableFuture<Map<LocalDate, List<BookingEvent>>> eventsForRange(LocalDate from, LocalDate to);
+
+    CompletableFuture<Map<LocalDate, List<BookingEvent>>> eventsForRange(LocalDate dateInRange);
 
 }
