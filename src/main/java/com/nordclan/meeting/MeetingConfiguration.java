@@ -6,6 +6,9 @@ import com.nordclan.meeting.services.jpa.JpaAuthenticationService;
 import com.nordclan.meeting.services.jpa.JpaBookingEventRepository;
 import com.nordclan.meeting.services.jpa.JpaBookingService;
 import com.nordclan.meeting.services.jpa.JpaBookingUserRepository;
+import com.nordclan.meeting.services.reactive.ReactiveSingleThreadDelegatingBookingService;
+import com.nordclan.meeting.services.views.BookingEventViewService;
+import com.nordclan.meeting.services.views.SynchronousBookingEventViewService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -43,6 +46,13 @@ public class MeetingConfiguration {
     @Bean
     public AuthenticationService authenticationService(){
         return new JpaAuthenticationService(userRepository);
+    }
+
+    @Bean
+    public BookingEventViewService bookingEventViewService() {
+        return new SynchronousBookingEventViewService(new ReactiveSingleThreadDelegatingBookingService(bookingService(), calendarService()),
+                                               authenticationService(),
+                                               calendarService().timeIntervals());
     }
 
 }

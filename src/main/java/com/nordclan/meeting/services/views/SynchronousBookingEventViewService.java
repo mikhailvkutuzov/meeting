@@ -14,18 +14,22 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
-public class SynchroniousBookingEventViewService implements BookingEventViewService {
+public class SynchronousBookingEventViewService implements BookingEventViewService {
 
     private ReactiveBookingService bookingService;
     private AuthenticationService authenticationService;
     private List<IntervalCaption> intervalCaptions;
     private List<LocalTime> intervals;
 
-    public SynchroniousBookingEventViewService(ReactiveBookingService bookingService, AuthenticationService authenticationService, List<IntervalCaption> intervalCaptions, List<LocalTime> intervals) {
+    public SynchronousBookingEventViewService(ReactiveBookingService bookingService, AuthenticationService authenticationService, List<LocalTime> intervals) {
         this.bookingService = bookingService;
         this.authenticationService = authenticationService;
-        this.intervalCaptions = intervalCaptions;
         this.intervals = intervals;
+        this.intervalCaptions = new ArrayList<>();
+        for(int i = 0; i < intervals.size() - 1; i++) {
+            intervalCaptions.add(new IntervalCaption(intervals.get(i).toString(), intervals.get(i+1).toString(), i));
+        }
+        intervalCaptions.add(new IntervalCaption(intervals.get(intervals.size() - 1).toString(), intervals.get(0).toString(), intervals.size() - 1));
     }
 
     private LocalDateTime fromLocalDateView(String dateView) {
@@ -98,6 +102,15 @@ public class SynchroniousBookingEventViewService implements BookingEventViewServ
     public WeekPage eventsForRange(String fromDate, String toDate, Locale locale) {
         try {
             return convert(bookingService.eventsForRange(LocalDate.parse(fromDate), LocalDate.parse(toDate)).get(), locale);
+        }  catch (InterruptedException | ExecutionException ex) {
+            throw new RuntimeException(ex.getCause());
+        }
+    }
+
+    @Override
+    public WeekPage eventsForRange(LocalDate weekDay, Locale locale) {
+        try {
+            return convert(bookingService.eventsForRange(weekDay).get(), locale);
         }  catch (InterruptedException | ExecutionException ex) {
             throw new RuntimeException(ex.getCause());
         }
