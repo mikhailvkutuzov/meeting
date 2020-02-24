@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Meeting</title>
+</head>
+<style>
+    .caption {
+        border: aquamarine;
+        border-bottom: 3px;
+        background: aqua;
+        align-content: center;
+        color: azure;
+        width: 100px;
+    }
+    .interval_caption {
+        background: brown;
+        width: 100px;
+    }
+    .cell{
+        background: antiquewhite;
+        color: azure;
+        width: 100px;
+
+    }
+    .empty_cell {
+        background: aliceblue;
+        color: azure;
+        width: 100px;
+    }
+</style>
+<body>
+    <table id="intervals">
+        <tr><th><span class="caption"></span></th>
+            <th th:each="day:${weekPage.dayCaption}" class="caption"><span th:text="${day.date + '  ' + day.name}">day</span></th>
+        </tr>
+        <tr th:each="interval:${weekPage.intervalCaptions}">
+            <td><span th:text="${interval.from}" class="interval_caption">interval</span></td>
+            <td th:each="idata:${weekPage.meetings.rows[interval.getNumber()].intervals}">
+                <span th:if="${!idata.isEmpty()}" class="cell"></span>
+                <span th:if="${idata.isEmpty()}" class="empty_cell"></span>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

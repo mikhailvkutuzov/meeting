@@ -40,7 +40,7 @@ public class MeetingConfiguration {
 
     @Bean
     public BookingService bookingService() {
-        return new Split2DaysBookingEventsOnEventsOperation(new JpaBookingService(eventRepository, calendarService(), maxLongitudeOfMeetingInIntervals), calendarService());
+        return new JpaBookingService(eventRepository, calendarService(), maxLongitudeOfMeetingInIntervals);
     }
 
     @Bean
@@ -50,7 +50,9 @@ public class MeetingConfiguration {
 
     @Bean
     public BookingEventViewService bookingEventViewService() {
-        return new SynchronousBookingEventViewService(new ReactiveSingleThreadDelegatingBookingService(bookingService(), calendarService()),
+        return new SynchronousBookingEventViewService(new ReactiveSingleThreadDelegatingBookingService(
+                new AddEmptyDaysIntoBookingEventsMap(new Split2DaysBookingEventsOnEventsOperation(bookingService(), calendarService())),
+                calendarService()),
                                                authenticationService(),
                                                calendarService().timeIntervals());
     }
